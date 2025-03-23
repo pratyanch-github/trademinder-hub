@@ -34,10 +34,12 @@ import {
   Truck,
   ChevronLeft,
   Smartphone,
+  AlertCircle,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Address, Order, OrderItem, OrderStatus } from "@/types";
 import { orders } from "@/data/mockData";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 type Step = "shipping" | "payment" | "review";
 
@@ -46,6 +48,7 @@ const Checkout: React.FC = () => {
   const { cart, clearCart } = useCart();
   const { user, isAuthenticated } = useAuth();
   const [currentStep, setCurrentStep] = useState<Step>("shipping");
+  const [upiPaymentStatus, setUpiPaymentStatus] = useState<string | null>(null);
   
   const [shippingAddress, setShippingAddress] = useState<Address>({
     fullName: user ? `${user.firstName} ${user.lastName}` : "",
@@ -113,6 +116,16 @@ const Checkout: React.FC = () => {
         toast.error("Please fill in all required payment fields");
         return;
       }
+      
+      // Simulate UPI payment notification initiation
+      if (paymentMethod === "upi" && upiDetails.upiId) {
+        setUpiPaymentStatus("pending");
+        setTimeout(() => {
+          setUpiPaymentStatus("success");
+          toast.success(`UPI payment request sent to ${upiDetails.upiId}`);
+        }, 1500);
+      }
+      
       setCurrentStep("review");
     }
   };
@@ -513,6 +526,15 @@ const Checkout: React.FC = () => {
                                 Enter your UPI ID in the format username@bankname
                               </p>
                             </div>
+                            
+                            <Alert className="bg-amber-50 border-amber-200">
+                              <AlertCircle className="h-4 w-4 text-amber-600" />
+                              <AlertTitle className="text-amber-800">UPI Payment Information</AlertTitle>
+                              <AlertDescription className="text-amber-700">
+                                When you proceed to the next step, a payment request will be initiated to your UPI ID.
+                                You'll need to approve this payment in your UPI app.
+                              </AlertDescription>
+                            </Alert>
                           </div>
                         )}
                         
@@ -541,6 +563,39 @@ const Checkout: React.FC = () => {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-6">
+                        {/* UPI Payment Status Banner */}
+                        {paymentMethod === "upi" && upiPaymentStatus && (
+                          <Alert className={
+                            upiPaymentStatus === "pending" 
+                              ? "bg-blue-50 border-blue-200" 
+                              : "bg-green-50 border-green-200"
+                          }>
+                            <AlertCircle className={
+                              upiPaymentStatus === "pending"
+                                ? "h-4 w-4 text-blue-600"
+                                : "h-4 w-4 text-green-600"
+                            } />
+                            <AlertTitle className={
+                              upiPaymentStatus === "pending"
+                                ? "text-blue-800"
+                                : "text-green-800"
+                            }>
+                              {upiPaymentStatus === "pending" 
+                                ? "UPI Payment Request Initiated" 
+                                : "UPI Payment Request Sent"}
+                            </AlertTitle>
+                            <AlertDescription className={
+                              upiPaymentStatus === "pending"
+                                ? "text-blue-700"
+                                : "text-green-700"
+                            }>
+                              {upiPaymentStatus === "pending" 
+                                ? `Sending payment request to ${upiDetails.upiId}...` 
+                                : `Payment request sent to ${upiDetails.upiId}. Please check your UPI app to approve the payment.`}
+                            </AlertDescription>
+                          </Alert>
+                        )}
+
                         <div>
                           <h3 className="font-medium mb-3">Shipping Address</h3>
                           <div className="bg-muted/20 p-4 rounded-md">
@@ -653,7 +708,10 @@ const Checkout: React.FC = () => {
                       Next
                     </Button>
                   ) : (
-                    <Button onClick={handlePlaceOrder}>
+                    <Button 
+                      onClick={handlePlaceOrder}
+                      disabled={paymentMethod === "upi" && upiPaymentStatus === "pending"}
+                    >
                       Place Order
                     </Button>
                   )}

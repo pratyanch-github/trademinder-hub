@@ -17,6 +17,7 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import OrderConfirmation from "./pages/OrderConfirmation";
 import Orders from "./pages/Orders";
+import OrderDetail from "./pages/OrderDetail";
 import Account from "./pages/Account";
 import NotFound from "./pages/NotFound";
 
@@ -50,6 +51,7 @@ const App = () => (
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/order-confirmation" element={<OrderConfirmation />} />
                 <Route path="/orders" element={<Orders />} />
+                <Route path="/order-detail/:orderId" element={<OrderDetail />} />
                 <Route path="/account" element={<Account />} />
                 
                 {/* Admin Routes */}
