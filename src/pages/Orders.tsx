@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -12,10 +11,8 @@ import {
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
-import { 
-  Badge,
-  Separator
-} from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { 
   Package, 
   Clock, 
@@ -39,10 +36,8 @@ const Orders: React.FC = () => {
       return;
     }
     
-    // Fetch user orders
     const fetchOrders = () => {
       if (user) {
-        // Filter orders by user ID
         const userOrderList = orders.filter(order => order.userId === user.id);
         setUserOrders(userOrderList);
       }
@@ -264,7 +259,6 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, index }) => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {/* Order Items */}
             <div className="space-y-4">
               {order.items.map((item) => (
                 <div key={item.id} className="flex items-center">
@@ -292,7 +286,6 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, index }) => {
             
             <Separator className="my-4" />
             
-            {/* Order Summary */}
             <div className="flex flex-col sm:flex-row justify-between">
               <div>
                 <div className="text-sm text-muted-foreground mb-1">Shipping Address</div>
