@@ -33,9 +33,11 @@ import {
   MapPin,
   Truck,
   ChevronLeft,
+  Smartphone,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { Address } from "@/types";
+import { Address, Order, OrderItem, OrderStatus } from "@/types";
+import { orders } from "@/data/mockData";
 
 type Step = "shipping" | "payment" | "review";
 
@@ -61,6 +63,10 @@ const Checkout: React.FC = () => {
     cardHolder: user ? `${user.firstName} ${user.lastName}` : "",
     expiryDate: "",
     cvv: "",
+  });
+  
+  const [upiDetails, setUpiDetails] = useState({
+    upiId: "",
   });
   
   // Calculate totals
@@ -89,6 +95,8 @@ const Checkout: React.FC = () => {
         cardDetails.expiryDate &&
         cardDetails.cvv.length >= 3
       );
+    } else if (paymentMethod === "upi") {
+      return upiDetails.upiId.includes('@');
     }
     return true;
   };
@@ -118,11 +126,39 @@ const Checkout: React.FC = () => {
   };
   
   const handlePlaceOrder = () => {
-    // Simulate order placement
-    toast.success("Order placed successfully!");
-    // Clear cart and navigate to confirmation
-    clearCart();
-    navigate("/order-confirmation");
+    if (user) {
+      // Create a new order
+      const orderItems: OrderItem[] = cart.items.map(item => ({
+        id: `item_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+        productId: item.product.id,
+        product: item.product,
+        quantity: item.quantity,
+        price: item.product.price
+      }));
+      
+      const newOrder: Order = {
+        id: `order_${Date.now()}`,
+        userId: user.id,
+        items: orderItems,
+        total: total,
+        status: "processing" as OrderStatus,
+        shippingAddress: shippingAddress,
+        paymentMethod: paymentMethod === "credit_card" ? "Credit Card" : 
+                      paymentMethod === "upi" ? "UPI" : "PayPal",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      // Add to mock data
+      orders.unshift(newOrder);
+      
+      // Show success message
+      toast.success("Order placed successfully!");
+      
+      // Clear cart and navigate to confirmation
+      clearCart();
+      navigate("/order-confirmation");
+    }
   };
   
   if (!isAuthenticated) {
@@ -376,6 +412,13 @@ const Checkout: React.FC = () => {
                             </Label>
                           </div>
                           <div className="flex items-center space-x-2 border rounded-md p-3">
+                            <RadioGroupItem value="upi" id="upi" />
+                            <Label htmlFor="upi" className="flex items-center">
+                              <Smartphone className="mr-2 h-4 w-4" />
+                              UPI Payment
+                            </Label>
+                          </div>
+                          <div className="flex items-center space-x-2 border rounded-md p-3">
                             <RadioGroupItem value="paypal" id="paypal" />
                             <Label htmlFor="paypal">PayPal</Label>
                           </div>
@@ -450,6 +493,29 @@ const Checkout: React.FC = () => {
                           </div>
                         )}
                         
+                        {paymentMethod === "upi" && (
+                          <div className="mt-6 space-y-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="upiId">UPI ID</Label>
+                              <Input
+                                id="upiId"
+                                placeholder="name@upi"
+                                value={upiDetails.upiId}
+                                onChange={(e) =>
+                                  setUpiDetails({
+                                    ...upiDetails,
+                                    upiId: e.target.value,
+                                  })
+                                }
+                                required
+                              />
+                              <p className="text-sm text-muted-foreground mt-1">
+                                Enter your UPI ID in the format username@bankname
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                        
                         {paymentMethod === "paypal" && (
                           <div className="mt-6 p-4 bg-muted/20 rounded-md text-center">
                             <p className="mb-2">
@@ -513,6 +579,11 @@ const Checkout: React.FC = () => {
                                   **** **** **** {cardDetails.cardNumber.slice(-4)}
                                 </p>
                                 <p>{cardDetails.cardHolder}</p>
+                              </div>
+                            ) : paymentMethod === "upi" ? (
+                              <div className="flex items-center">
+                                <Smartphone className="h-4 w-4 mr-2" />
+                                <span>UPI: {upiDetails.upiId}</span>
                               </div>
                             ) : (
                               <div className="flex items-center">

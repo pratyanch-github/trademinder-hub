@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { orders } from "@/data/mockData";
 import { Order } from "@/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
 import OrderCard from "@/components/order/OrderCard";
 import EmptyOrdersState from "@/components/order/EmptyOrdersState";
 
@@ -22,12 +23,23 @@ const Orders: React.FC = () => {
     
     const fetchOrders = () => {
       if (user) {
+        // Filter orders by the current user
         const userOrderList = orders.filter(order => order.userId === user.id);
         setUserOrders(userOrderList);
       }
     };
     
     fetchOrders();
+
+    // Add an event listener to refresh orders when coming back to this page
+    const onFocus = () => {
+      fetchOrders();
+    };
+
+    window.addEventListener('focus', onFocus);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+    };
   }, [user, isAuthenticated, navigate]);
   
   return (
